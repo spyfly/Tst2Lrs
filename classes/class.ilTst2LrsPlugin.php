@@ -41,20 +41,29 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         parent::__construct();
     }
 
-    public static function main(string $active_id, string $pass)
+    public static function main(string $active_id, string $pass, string $obj_id, string $user_id, string $a_event)
     {
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Fetching Test Data for active_id: ' . $active_id);
         global $DIC;
-        $ilTestObj = new ilObjTest(486, false);
+        $ilTestObj = new ilObjTest($obj_id, false);
+        $ilUsrObj = new ilObjUser($user_id);
+        
+        $pass_details = null;
+        $test_details = null;
         $ilTestServiceGui = new ilObjTestGUI();
         $answers = $ilTestObj->getTestResult($active_id, $pass);
         foreach ($answers as $key => $values) {
-            self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Values: ' . print_r($values, true));
-            if ($values['qid']) {
+            if ($key === 'pass') {
+                $pass_details = $values;
+            } else if ($key === 'test') {
+                $test_details = $values;
+            }
+            self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Values for "'.$key.'" ' . print_r($values, true));
+            /*if ($values['qid']) {
                 $questionUi = $ilTestServiceGui->object->createQuestionGUI("", $values['qid']);
                 $solutions = $questionUi->getSolutionOutput($active_id, $pass, false, true, true, true, false);
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Solution: ' . print_r($solutions, true));
-            }
+            }*/
         }
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Fetched Test Data!');
         //self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | ' . print_r($answers, true));
@@ -63,6 +72,10 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | ' . var_export($testSession, true));
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | ' . print_r($testData, true));
         */
+
+        $lrsType = new ilCmiXapiLrsType('1');
+        $xapiStatement = new ilTst2LrsXapiStatement($lrsType, $ilTestObj, $ilUsrObj, $a_event, $pass_details, $test_details);
+        self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | xAPI Statement: ' . json_encode($xapiStatement));
     }
 
     /**
@@ -104,7 +117,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         // TODO: Implement handleEvent
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | C: ' . $a_component . ' | E: ' . $a_event . ' | P: ' . json_encode($a_parameter));
         if ($a_event === 'finishTestPass') {
-            $this::main($a_parameter['active_id'], $a_parameter['pass']);
+            $this::main($a_parameter['active_id'], $a_parameter['pass'], $a_parameter['obj_id'], $a_parameter['user_id'], $a_event);
         }
     }
 
