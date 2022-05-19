@@ -136,7 +136,7 @@ class ilTst2LrsXapiStatement implements JsonSerializable
 				'max' => $this->pass_details['total_max_points'],
 			],
 			'completion' => $this->event_type === 'finishTestPass',
-			'success' => $this->test_details['passed'] === 1
+			'success' => $this->test_details['passed'] == 1
 		];
 	}
 	
