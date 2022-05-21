@@ -13,7 +13,7 @@ use spyfly\Plugins\Tst2Lrs\Utils\Tst2LrsTrait;
  * @author      Björn Heyser <info@bjoernheyser.de>
  * @author      Sebastian Heiden <tst2lrs@spyfly.xyz>
  */
-class ilTst2LrsXapiStatement implements JsonSerializable
+class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerializable
 {
 	use Tst2LrsTrait;
     use DICTrait;
@@ -195,7 +195,7 @@ class ilTst2LrsXapiStatement implements JsonSerializable
 		
 		$statement['object'] = $this->buildObject();
 		
-		$statement['context'] = $this->buildContext();
+		//$statement['context'] = $this->buildContext();
 		
 		return $statement;
 	}

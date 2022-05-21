@@ -73,9 +73,23 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | ' . print_r($testData, true));
         */
 
+        $xapiStatementList = new ilLp2LrsXapiStatementList();
+
         $lrsType = new ilCmiXapiLrsType('1');
         $xapiStatement = new ilTst2LrsXapiStatement($lrsType, $ilTestObj, $ilUsrObj, $a_event, $pass_details, $test_details);
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | xAPI Statement: ' . json_encode($xapiStatement));
+
+        $xapiStatementList->addStatement($xapiStatement);
+
+        /* Send Data to LRS */
+        $lrsRequest = new ilLp2LrsXapiRequest(
+			ilLoggerFactory::getRootLogger(),
+			$lrsType->getLrsEndpointStatementsLink(),
+			$lrsType->getLrsKey(),
+			$lrsType->getLrsSecret()
+		);
+
+        $lrsRequest->send($xapiStatementList);
     }
 
     /**
