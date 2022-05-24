@@ -41,11 +41,11 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         parent::__construct();
     }
 
-    public static function main(string $active_id, string $pass, string $obj_id, string $user_id, string $a_event)
+    public static function main(string $active_id, string $pass, string $ref_id, string $user_id, string $a_event)
     {
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Fetching Test Data for active_id: ' . $active_id);
         global $DIC;
-        $ilTestObj = new ilObjTest($obj_id, false);
+        $ilTestObj = new ilObjTest($ref_id);
         $ilUsrObj = new ilObjUser($user_id);
         
         $pass_details = null;
@@ -67,15 +67,26 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
                 foreach ($solutionsRaw as $idx => $solution_value) {
                     $user_solution = $solution_value["value1"];
                 }
+
+                $choices = [];
+                if (isset($questionUi->object->answers)) {
+                    foreach ($questionUi->object->answers as $key => $answer) {
+                        if (isset($answer)) {
+                            $choices[$key] = $answer->getAnswertext();
+                        }
+                    }
+                }
+
                 if ($values['type'] == 'assSingleChoice') {
                     $user_selection['key'] = $user_solution;
-                    $user_selection['value'] = $questionUi->object->answers[$user_solution]->getAnswertext();
+                    //$user_selection['value'] = $questionUi->object->answers[$user_solution]->getAnswertext();
                 } else if ($values['type'] == 'assNumeric') {
                     $user_selection['value'] = $user_solution;
                 }
                 //$solutionsHtml = $questionUi->getSolutionOutput($active_id, $pass, false, true, true, true, false);
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | SolutionRaw: ' . print_r($solutionsRaw, true));
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | UserSelection: ' . print_r($user_selection, true));
+                self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Choices: ' . print_r($choices, true));
             }
         }
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Fetched Test Data!');
@@ -146,7 +157,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         // TODO: Implement handleEvent
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | C: ' . $a_component . ' | E: ' . $a_event . ' | P: ' . json_encode($a_parameter));
         if ($a_event === 'finishTestPass') {
-            $this::main($a_parameter['active_id'], $a_parameter['pass'], $a_parameter['obj_id'], $a_parameter['user_id'], $a_event);
+            $this::main($a_parameter['active_id'], $a_parameter['pass'], $a_parameter['ref_id'], $a_parameter['user_id'], $a_event);
         }
     }
 
