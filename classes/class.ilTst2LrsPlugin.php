@@ -47,17 +47,17 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         global $DIC;
         $ilTestObj = new ilObjTest($ref_id);
         $ilUsrObj = new ilObjUser($user_id);
+
+        $xapiStatementList = new ilLp2LrsXapiStatementList();
+        $lrsType = new ilCmiXapiLrsType('1');
         
         $pass_details = null;
         $test_details = null;
         $ilTestServiceGui = new ilObjTestGUI();
         $answers = $ilTestObj->getTestResult($active_id, $pass);
+        $test_details = $answers['test'];
+        $pass_details = $answers['pass'];
         foreach ($answers as $key => $values) {
-            if ($key === 'pass') {
-                $pass_details = $values;
-            } else if ($key === 'test') {
-                $test_details = $values;
-            }
             self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Values for "'.$key.'" ' . print_r($values, true));
             if ($values['qid']) {
                 $questionUi = $ilTestServiceGui->object->createQuestionGUI("", $values['qid']);
@@ -87,6 +87,10 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | SolutionRaw: ' . print_r($solutionsRaw, true));
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | UserSelection: ' . print_r($user_selection, true));
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Choices: ' . print_r($choices, true));
+
+                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj);
+                self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | QRS xAPI Statement: ' . json_encode($resultStmt));
+                $xapiStatementList->addStatement($resultStmt);
             }
         }
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Fetched Test Data!');
@@ -97,10 +101,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | ' . print_r($testData, true));
         */
 
-        $xapiStatementList = new ilLp2LrsXapiStatementList();
-
         /* Build test finalization statement */
-        $lrsType = new ilCmiXapiLrsType('1');
         $xapiStatement = new ilTst2LrsXapiStatement($lrsType, $ilTestObj, $ilUsrObj, $a_event, $pass_details, $test_details);
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | xAPI Statement: ' . json_encode($xapiStatement));
 
