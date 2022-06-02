@@ -55,6 +55,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	public function __construct(
 		$lrsType,
 		ilObjUser $user,
+		$event_type,
 		$ass_details,
 		$test_details,
 		ilObjTest $testObj
@@ -62,6 +63,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	{
 		$this->lrsType = $lrsType;
 		$this->user = $user;
+		$this->event_type = $event_type;
 		$this->ass_details = $ass_details;
 		$this->test_details = $test_details;
 		$this->testObj = $testObj;

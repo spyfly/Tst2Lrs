@@ -88,7 +88,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | UserSelection: ' . print_r($user_selection, true));
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Choices: ' . print_r($choices, true));
 
-                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj);
+                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $a_event, $values, $test_details, $ilTestObj);
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | QRS xAPI Statement: ' . json_encode($resultStmt));
                 $xapiStatementList->addStatement($resultStmt);
             }
@@ -106,6 +106,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | xAPI Statement: ' . json_encode($xapiStatement));
 
         $xapiStatementList->addStatement($xapiStatement);
+        self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Full xAPI Statement: ' . json_encode($xapiStatementList->getStatements()));
         /* Test finalization stmt end */
 
         /* Send Data to LRS */
