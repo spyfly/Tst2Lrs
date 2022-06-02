@@ -1,22 +1,21 @@
 # Tst2Lrs ILIAS Plugin
 
+## Requirements
+
+Install the [Lp2Lrs Plugin](https://github.com/internetlehrer/Lp2Lrs) first and configure a learning record store.
+
 ## Installation
 
-Start at your ILIAS root directory. It is assumed the generated downloaded plugin `tst2lrs.zip` is in your download folder `~/Downloads`. Otherwise please adjust the commands below
-
-Run the follow commands:
+Start at your ILIAS root directory.
 
 ```bash
-mkdir -p Customizing/global/plugins
-cd Customizing/global/plugins
-mv ~/Downloads/tst2lrs.zip tst2lrs.zip
-unzip tst2lrs.zip
-unlink tst2lrs.zip
+mkdir -p Customizing/global/plugins/Services/EventHandling/EventHook
+cd Customizing/global/plugins/Services/EventHandling/EventHook
+git clone https://github.com/spyfly/Tst2Lrs.git
+composer install
 ```
 
-Update and activate the plugin in the ILIAS Plugin Administration
-
-Look after `TODO`'s in the plugin code. May you can remove some files (For example config) depending on your use. Also override this initial Readme
+Then update and activate the plugin in the ILIAS Plugin Administration
 
 ## Requirements
 
