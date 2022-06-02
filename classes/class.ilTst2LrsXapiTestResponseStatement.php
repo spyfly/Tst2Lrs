@@ -152,6 +152,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 			'id' => $this->buildContext()['contextActivities']['parent']['id'] . '/' . $this->ass_details['qid'],
 			'definition' => [
 				'name' => [$this->getLocale() => $this->ass_details['title']],
+				'description' => [$this->getLocale() => $this->questionUi->object->getQuestion()],
 				'type' => 'http://adlnet.gov/expapi/activities/cmi.interaction'
 			]
 		];
