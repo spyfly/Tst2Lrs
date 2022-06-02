@@ -43,11 +43,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
 
     public static function main(string $active_id, string $pass, string $ref_id, string $user_id, string $a_event)
     {
-        $multipleChoiceTypes = ['assMultipleChoice', 'assTextQuestion'];
-        $singleChoiceTypes = ['assSingleChoice'];
-
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Fetching Test Data for active_id: ' . $active_id);
-        global $DIC;
         $ilTestObj = new ilObjTest($ref_id);
         $ilUsrObj = new ilObjUser($user_id);
 
@@ -65,40 +61,13 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
             if ($values['qid']) {
                 $questionUi = $ilTestServiceGui->object->createQuestionGUI("", $values['qid']);
                 $solutionsRaw = $questionUi->object->getSolutionValues($active_id, $pass);
-                $user_solution = null;
-                $user_selection = [];
-                foreach ($solutionsRaw as $idx => $solution_value) {
-                    $user_solution = $solution_value["value1"];
-                }
 
-                $choices = [];
-                $correctChoices = [];
-                if (isset($questionUi->object->answers)) {
-                    foreach ($questionUi->object->answers as $key => $answer) {
-                        if (isset($answer)) {
-                            $choices[$key] = $answer->getAnswertext();
-                            if (in_array($values['type'], $multipleChoiceTypes) && $answer->getPointsChecked() > 0) {
-                                $correctChoices[] = (string)$key;
-                            } else if (in_array($values['type'], $singleChoiceTypes) && $answer->getPoints() > 0) {
-                                $correctChoices[] = (string)$key;
-                            }
-                        }
-                    }
-                }
-
-                if ($values['type'] == 'assSingleChoice') {
-                    $user_selection['key'] = $user_solution;
-                    //$user_selection['value'] = $questionUi->object->answers[$user_solution]->getAnswertext();
-                } else if ($values['type'] == 'assNumeric') {
-                    $user_selection['value'] = $user_solution;
-                }
                 //$solutionsHtml = $questionUi->getSolutionOutput($active_id, $pass, false, true, true, true, false);
-                self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | SolutionRaw: ' . print_r($solutionsRaw, true));
-                self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | UserSelection: ' . print_r($user_selection, true));
-                self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Choices: ' . print_r($choices, true));
+                //self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | SolutionRaw: ' . print_r($solutionsRaw, true));
+                //self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Choices: ' . print_r($choices, true));
 
-                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj, $choices, $correctChoices);
-                self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | QRS xAPI Statement: ' . json_encode($resultStmt));
+                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj, $questionUi, $solutionsRaw);
+                //self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | QRS xAPI Statement: ' . json_encode($resultStmt));
                 $xapiStatementList->addStatement($resultStmt);
             }
         }

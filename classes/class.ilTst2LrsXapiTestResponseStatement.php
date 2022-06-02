@@ -16,26 +16,33 @@ use spyfly\Plugins\Tst2Lrs\Utils\Tst2LrsTrait;
 class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implements JsonSerializable
 {
 	use Tst2LrsTrait;
-    use DICTrait;
+	use DICTrait;
 
 	protected static $XAPI_VERBS = [
 		'http://adlnet.gov/expapi/verbs/answered' => 'answered'
 	];
-		
+
+	protected static $INTERACTION_TYPES = [
+		'assSingleChoice' => 'choice',
+		'assMultipleChoice' => 'choice',
+		'assTextQuestion' => 'long-fill-in',
+		'assNumeric' => 'numeric',
+	];
+
 	const CATEGORY_DEFINITION_TYPE_TAG = 'http://id.tincanapi.com/activitytype/tag';
-	
+
 	const DEFAULT_LOCALE = 'en-US';
-	
+
 	/**
 	 * @var ilCmiXapiLrsType
 	 */
 	protected $lrsType;
-	
+
 	/**
 	 * @var ilObject
 	 */
 	protected $object;
-	
+
 	/**
 	 * @var ilObjUser
 	 */
@@ -45,7 +52,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	 * @var string
 	 */
 	protected $event_type;
-	
+
 	/**
 	 * ilTst2LrsXapiStatement constructor.
 	 * @param ilCmiXapiLrsType|ilXapiCmi5Type  $lrsType
@@ -58,39 +65,44 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		$ass_details,
 		$test_details,
 		ilObjTest $testObj,
-		$choices,
-		$correct_choices
-	)
-	{
+		$questionUi,
+		$user_solutions
+	) {
 		$this->lrsType = $lrsType;
 		$this->user = $user;
 		$this->ass_details = $ass_details;
 		$this->test_details = $test_details;
 		$this->testObj = $testObj;
-		$this->choices = $choices;
-		$this->correct_choices = $correct_choices;
+		$this->questionUi = $questionUi;
+		$this->user_solutions = $user_solutions;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	protected function buildTimestamp()
 	{
-		$timestamp = new ilCmiXapiDateTime($this->test_details['result_tstamp'], IL_CAL_UNIX);
+		/* Fetch Test Result Timestamp as fallback for unanswered questions */
+		$raw_timestamp = $this->test_details['result_tstamp'];
+		if (count($this->user_solutions) > 0) {
+			/* If we have a user_solution, fetch solution timestamp instead */
+			$raw_timestamp = $this->user_solutions[0]['tstamp'];
+		}
+		$timestamp = new ilCmiXapiDateTime($raw_timestamp, IL_CAL_UNIX);
 		return $timestamp->toXapiTimestamp();
 	}
-	
+
 	protected function hasResult()
 	{
 		return $this->ass_details !== null;
 	}
-	
+
 	/**
 	 * @return array
 	 */
 	protected function buildResult()
 	{
-		return [
+		$result = [
 			'score' => [
 				'scaled' => $this->ass_details['reached'] / $this->ass_details['max'],
 				'raw' => $this->ass_details['reached'],
@@ -98,10 +110,25 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 				'max' => $this->ass_details['max'],
 			],
 			'completion' => $this->ass_details['answered'] == 1,
-			'success' => $this->test_details['passed'] == 1
 		];
+
+		if (count($this->user_solutions) > 0) {
+			$result['response'] = $this->buildUserResponse();
+		}
+
+		return $result;
 	}
-	
+
+	protected function buildUserResponse()
+	{
+		$solutions = [];
+		foreach ($this->user_solutions as $key => $solution) {
+			$solutions[] = $solution['value1'];
+		}
+
+		return implode('[,]', $solutions);
+	}
+
 	/**
 	 * @return array
 	 */
@@ -109,8 +136,13 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	{
 		return [
 			'id' => "http://adlnet.gov/expapi/verbs/answered",
-			'display' => [ $this->getLocale() => "answered" ]
+			'display' => [$this->getLocale() => "answered"]
 		];
+	}
+
+	protected function getInteractionType()
+	{
+		return self::$INTERACTION_TYPES[$this->ass_details['type']];
 	}
 
 	/* Placeholder */
@@ -118,30 +150,62 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	{
 		$objectProperties = [
 			'id' => $this->buildContext()['contextActivities']['parent']['id'] . '/' . $this->ass_details['qid'],
-                'definition' => [
-                    'name' => [$this->getLocale() => $this->ass_details['title']],
-                    'type' => 'http://adlnet.gov/expapi/activities/cmi.interaction'
-                ]
+			'definition' => [
+				'name' => [$this->getLocale() => $this->ass_details['title']],
+				'type' => 'http://adlnet.gov/expapi/activities/cmi.interaction'
+			]
 		];
 
-		if (count($this->choices) > 0) {
-			$objectProperties['definition']['interactionType'] = 'choice';
-			$objectProperties['definition']['choices'] = $this->buildChoices();
-			$objectProperties['definition']['correctResponsesPattern'] = $this->correct_choices;
+		$objectProperties['definition']['interactionType'] = $this->getInteractionType();
+		if ($this->getInteractionType() === 'choice') {
+			list($objectProperties['definition']['choices'], $objectProperties['definition']['correctResponsesPattern']) = $this->buildChoicesList();
+		} else if ($this->getInteractionType() === 'numeric') {
+			$objectProperties['definition']['correctResponsesPattern'] = $this->buildNumericCorrectResponsesPattern();
+		} else if ($this->getInteractionType() === 'long-fill-in') {
+			$objectProperties['definition']['correctResponsesPattern'] = $this->buildFillInCorrectResponsesPattern();
 		}
 
 		return $objectProperties;
 	}
 
-	protected function buildChoices() {
+	protected function buildChoicesList()
+	{
 		$choices = [];
-		foreach ($this->choices as $id => $description) {
-			$choices[$id] = [
-				'id' => (string)$id,
-				'description' => [$this->getLocale() => $description]
-			];
+		$correctResponsesPattern = [];
+		if (isset($this->questionUi->object->answers)) {
+			foreach ($this->questionUi->object->answers as $id => $answer) {
+				$choices[$id] = [
+					'id' => (string)$id,
+					'description' => [$this->getLocale() => $answer->getAnswertext()]
+				];
+				if ($this->ass_details['type'] == 'assMultipleChoice' && $answer->getPointsChecked() > 0) {
+					$correctResponsesPattern[] = (string)$id;
+				} else if ($this->ass_details['type'] == 'assSingleChoice' && $answer->getPoints() > 0) {
+					$correctResponsesPattern[] = (string)$id;
+				}
+			}
 		}
-		return $choices;
+
+		return [$choices, $correctResponsesPattern];
+	}
+
+	protected function buildNumericCorrectResponsesPattern()
+	{
+		return [$this->questionUi->object->getLowerLimit() . '[:]' . $this->questionUi->object->getUpperLimit()];
+	}
+
+	protected function buildFillInCorrectResponsesPattern()
+	{
+		$correctResponsesPattern = [];
+		if (isset($this->questionUi->object->answers)) {
+			foreach ($this->questionUi->object->answers as $id => $answer) {
+				if ($answer->getPointsChecked() > 0) {
+					$correctResponsesPattern[] = $answer->getAnswertext();
+				}
+			}
+		}
+
+		return $correctResponsesPattern;
 	}
 
 	/**
@@ -152,7 +216,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		$context = [
 			'contextActivities' => []
 		];
-		
+
 		$context['contextActivities']['parent'] = $this->getObjectProperties($this->testObj);
 
 		/*
@@ -162,7 +226,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
             $context['contextActivities']['category'] = $categories;
         }
 		*/
-		
+
 		return $context;
 	}
 }
