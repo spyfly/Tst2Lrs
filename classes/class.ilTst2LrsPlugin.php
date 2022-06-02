@@ -43,6 +43,9 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
 
     public static function main(string $active_id, string $pass, string $ref_id, string $user_id, string $a_event)
     {
+        $multipleChoiceTypes = ['assMultipleChoice', 'assTextQuestion'];
+        $singleChoiceTypes = ['assSingleChoice'];
+
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Fetching Test Data for active_id: ' . $active_id);
         global $DIC;
         $ilTestObj = new ilObjTest($ref_id);
@@ -69,10 +72,16 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
                 }
 
                 $choices = [];
+                $correctChoices = [];
                 if (isset($questionUi->object->answers)) {
                     foreach ($questionUi->object->answers as $key => $answer) {
                         if (isset($answer)) {
                             $choices[$key] = $answer->getAnswertext();
+                            if (in_array($values['type'], $multipleChoiceTypes) && $answer->getPointsChecked() > 0) {
+                                $correctChoices[] = (string)$key;
+                            } else if (in_array($values['type'], $singleChoiceTypes) && $answer->getPoints() > 0) {
+                                $correctChoices[] = (string)$key;
+                            }
                         }
                     }
                 }
@@ -88,7 +97,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | UserSelection: ' . print_r($user_selection, true));
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Choices: ' . print_r($choices, true));
 
-                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj, $choices);
+                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj, $choices, $correctChoices);
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | QRS xAPI Statement: ' . json_encode($resultStmt));
                 $xapiStatementList->addStatement($resultStmt);
             }

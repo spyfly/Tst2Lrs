@@ -58,7 +58,8 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		$ass_details,
 		$test_details,
 		ilObjTest $testObj,
-		$choices
+		$choices,
+		$correct_choices
 	)
 	{
 		$this->lrsType = $lrsType;
@@ -67,6 +68,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		$this->test_details = $test_details;
 		$this->testObj = $testObj;
 		$this->choices = $choices;
+		$this->correct_choices = $correct_choices;
 	}
 	
 	/**
@@ -125,6 +127,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		if (count($this->choices) > 0) {
 			$objectProperties['definition']['interactionType'] = 'choice';
 			$objectProperties['definition']['choices'] = $this->buildChoices();
+			$objectProperties['definition']['correctResponsesPattern'] = $this->correct_choices;
 		}
 
 		return $objectProperties;
