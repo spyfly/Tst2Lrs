@@ -57,7 +57,8 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		ilObjUser $user,
 		$ass_details,
 		$test_details,
-		ilObjTest $testObj
+		ilObjTest $testObj,
+		$choices
 	)
 	{
 		$this->lrsType = $lrsType;
@@ -65,6 +66,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		$this->ass_details = $ass_details;
 		$this->test_details = $test_details;
 		$this->testObj = $testObj;
+		$this->choices = $choices;
 	}
 	
 	/**
@@ -120,7 +122,23 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
                 ]
 		];
 
+		if (count($this->choices) > 0) {
+			$objectProperties['definition']['interactionType'] = 'choice';
+			$objectProperties['definition']['choices'] = $this->buildChoices();
+		}
+
 		return $objectProperties;
+	}
+
+	protected function buildChoices() {
+		$choices = [];
+		foreach ($this->choices as $id => $description) {
+			$choices[$id] = [
+				'id' => (string)$id,
+				'description' => [$this->getLocale() => $description]
+			];
+		}
+		return $choices;
 	}
 
 	/**
