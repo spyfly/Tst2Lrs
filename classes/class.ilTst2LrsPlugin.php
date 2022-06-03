@@ -51,26 +51,29 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         /* Init LRS Record Store and xAPI STMT List */
         $xapiStatementList = new ilLp2LrsXapiStatementList();
         $settings = new ilSetting(ilLp2LrsCron::JOB_ID);
-		$lrsTypeId = $settings->get('lrs_type_id', 0);
-		$lrsType = new ilCmiXapiLrsType($lrsTypeId);
+        $lrsTypeId = $settings->get('lrs_type_id', 0);
+        $lrsType = new ilCmiXapiLrsType($lrsTypeId);
         /* Init LRS End */
-        
+
         /* Create Test Service GUI for loading answer results */
         $ilTestServiceGui = new ilObjTestGUI();
         /* Load Test Results */
         $results = $ilTestObj->getTestResult($active_id, $pass);
         $test_details = $results['test'];
         $pass_details = $results['pass'];
-        foreach ($results as $key => $values) {
-            self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Values for "'.$key.'" ' . print_r($values, true));
-            if ($values['qid']) {
-                /* Load questionUi and solution values (needs active and passId) */
-                $questionUi = $ilTestServiceGui->object->createQuestionGUI("", $values['qid']);
-                $solutionsRaw = $questionUi->object->getSolutionValues($active_id, $pass);
 
-                /* Create Question specific xAPI STMT and add to stmt list */
-                $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj, $questionUi, $solutionsRaw);
-                $xapiStatementList->addStatement($resultStmt);
+        if ($a_event === 'finishTestPass') { /* Only submit responses on finish */
+            foreach ($results as $key => $values) {
+                self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Values for "' . $key . '" ' . print_r($values, true));
+                if ($values['qid']) {
+                    /* Load questionUi and solution values (needs active and passId) */
+                    $questionUi = $ilTestServiceGui->object->createQuestionGUI("", $values['qid']);
+                    $solutionsRaw = $questionUi->object->getSolutionValues($active_id, $pass);
+
+                    /* Create Question specific xAPI STMT and add to stmt list */
+                    $resultStmt = new ilTst2LrsXapiTestResponseStatement($lrsType, $ilUsrObj, $values, $test_details, $ilTestObj, $questionUi, $solutionsRaw);
+                    $xapiStatementList->addStatement($resultStmt);
+                }
             }
         }
         /* Build test finalization statement */
@@ -82,11 +85,11 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
 
         /* Send Data to LRS */
         $lrsRequest = new ilLp2LrsXapiRequest(
-			ilLoggerFactory::getRootLogger(),
-			$lrsType->getLrsEndpointStatementsLink(),
-			$lrsType->getLrsKey(),
-			$lrsType->getLrsSecret()
-		);
+            ilLoggerFactory::getRootLogger(),
+            $lrsType->getLrsEndpointStatementsLink(),
+            $lrsType->getLrsKey(),
+            $lrsType->getLrsSecret()
+        );
 
         $lrsRequest->send($xapiStatementList);
     }
@@ -129,7 +132,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
     {
         // TODO: Implement handleEvent
         self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | C: ' . $a_component . ' | E: ' . $a_event . ' | P: ' . json_encode($a_parameter));
-        if ($a_event === 'finishTestPass') {
+        if ($a_component === 'Modules/Test') {
             $this::main($a_parameter['active_id'], $a_parameter['pass'], $a_parameter['ref_id'], $a_parameter['user_id'], $a_event);
         }
     }

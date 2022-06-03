@@ -12,7 +12,10 @@ Start at your ILIAS root directory.
 mkdir -p Customizing/global/plugins/Services/EventHandling/EventHook
 cd Customizing/global/plugins/Services/EventHandling/EventHook
 git clone https://github.com/spyfly/Tst2Lrs.git
+cd Tst2Lrs
 composer install
+cd /var/www/html/ilias # modify ILIAS install dir as necessary
+git apply Customizing/global/plugins/Services/EventHandling/EventHook/Tst2Lrs/ilias.patch
 ```
 
 Then update and activate the plugin in the ILIAS Plugin Administration

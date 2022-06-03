@@ -1,0 +1,110 @@
+diff --git a/Modules/Test/classes/class.ilTestOutputGUI.php b/Modules/Test/classes/class.ilTestOutputGUI.php
+index eca4874548..cdc7c1da5f 100644
+--- a/Modules/Test/classes/class.ilTestOutputGUI.php
++++ b/Modules/Test/classes/class.ilTestOutputGUI.php
+@@ -231,6 +231,21 @@ abstract class ilTestOutputGUI extends ilTestPlayerAbstractGUI
+         $this->ctrl->setParameter($this, 'sequence', $sequenceElement);
+         $this->ctrl->setParameter($this, 'pmode', '');
+ 
++        // Raise startTestPass Event
++        global $DIC;
++
++        $ilAppEventHandler = $DIC['ilAppEventHandler'];
++        $ilAppEventHandler->raise(
++            'Modules/Test',
++            'startTestPass',
++            array(
++                'active_id' => $this->testSession->getActiveId(),
++                'pass' => $this->testSession->getPass(),
++                'user_id' => $this->testSession->getUserId(),
++                'ref_id' => $this->object->getRefId()
++            )
++        );
++
+         if ($this->object->getListOfQuestionsStart()) {
+             $this->ctrl->redirect($this, ilTestPlayerCommands::QUESTION_SUMMARY);
+         }
+@@ -829,6 +844,21 @@ abstract class ilTestOutputGUI extends ilTestPlayerAbstractGUI
+             $this->testSequence->saveToDb();
+         }
+ 
++        // Raise resumeTestPass Event
++        global $DIC;
++
++        $ilAppEventHandler = $DIC['ilAppEventHandler'];
++        $ilAppEventHandler->raise(
++            'Modules/Test',
++            'resumeTestPass',
++            array(
++                'active_id' => $this->testSession->getActiveId(),
++                'pass' => $this->testSession->getPass(),
++                'user_id' => $this->testSession->getUserId(),
++                'ref_id' => $this->object->getRefId()
++            )
++        );
++
+         if ($this->object->getListOfQuestionsStart()) {
+             $this->ctrl->redirect($this, ilTestPlayerCommands::QUESTION_SUMMARY);
+         }
+diff --git a/Modules/Test/classes/class.ilTestPlayerAbstractGUI.php b/Modules/Test/classes/class.ilTestPlayerAbstractGUI.php
+index e19e1b1596..e2ce839853 100644
+--- a/Modules/Test/classes/class.ilTestPlayerAbstractGUI.php
++++ b/Modules/Test/classes/class.ilTestPlayerAbstractGUI.php
+@@ -200,6 +200,21 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
+ 
+     public function suspendTestCmd()
+     {
++        // Raise suspendTestPass Event
++        global $DIC;
++
++        $ilAppEventHandler = $DIC['ilAppEventHandler'];
++        $ilAppEventHandler->raise(
++            'Modules/Test',
++            'suspendTestPass',
++            array(
++                'active_id' => $this->testSession->getActiveId(),
++                'pass' => $this->testSession->getPass(),
++                'user_id' => $this->testSession->getUserId(),
++                'ref_id' => $this->object->getRefId()
++            )
++)       ;
++
+         $this->ctrl->redirectByClass("ilobjtestgui", "infoScreen");
+     }
+ 
+@@ -832,6 +847,21 @@ abstract class ilTestPlayerAbstractGUI extends ilTestServiceGUI
+ 
+         $finishTasks = new ilTestPassFinishTasks($this->testSession->getActiveId(), $this->object->getId());
+         $finishTasks->performFinishTasks($this->processLocker);
++
++        // Raise finishTestPass Event
++        global $DIC;
++
++        $ilAppEventHandler = $DIC['ilAppEventHandler'];
++        $ilAppEventHandler->raise(
++            'Modules/Test',
++            'finishTestPass',
++            array(
++                'active_id' => $this->testSession->getActiveId(),
++                'pass' => $this->testSession->getPass(),
++                'user_id' => $this->testSession->getUserId(),
++                'ref_id' => $this->object->getRefId()
++            )
++        );
+     }
+ 
+     protected function afterTestPassFinishedCmd()
+diff --git a/Modules/Test/module.xml b/Modules/Test/module.xml
+index 1089f0232c..a2c4e66a93 100644
+--- a/Modules/Test/module.xml
++++ b/Modules/Test/module.xml
+@@ -33,6 +33,9 @@
+ 	<crons>
+ 		<cron id="finish_unfinished_passes" class="ilCronFinishUnfinishedTestPasses" />
+ 	</crons>
++	<events>
++		<event type='raise' id='Modules/Test' />
++	</events>
+ 	<pluginslots>
+ 		<pluginslot id="texp" name="Export" />
+ 		<pluginslot id="tsig" name="Signature" />

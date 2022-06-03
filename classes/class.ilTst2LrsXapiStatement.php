@@ -16,35 +16,39 @@ use spyfly\Plugins\Tst2Lrs\Utils\Tst2LrsTrait;
 class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerializable
 {
 	use Tst2LrsTrait;
-    use DICTrait;
+	use DICTrait;
 
 	protected static $XAPI_VERBS = [
-		'http://adlnet.gov/expapi/verbs/failed' => 'failed',
-		'http://adlnet.gov/expapi/verbs/completed' => 'completed',
-		'http://adlnet.gov/expapi/verbs/attempted' => 'attempted'
+		'http://adlnet.gov/expapi/verbs/attempted' => 'attempted',
+		'http://adlnet.gov/expapi/verbs/resumed' => 'resumed',
+		'http://adlnet.gov/expapi/verbs/suspended' => 'suspended',
+		'http://adlnet.gov/expapi/verbs/completed' => 'completed'
 	];
-	
+
 	protected static $VERBS_BY_EVENT_TYPE = [
+		'startTestPass' => 'http://adlnet.gov/expapi/verbs/attempted',
+		'resumeTestPass' => 'http://adlnet.gov/expapi/verbs/resumed',
+		'suspendTestPass' => 'http://adlnet.gov/expapi/verbs/suspended',
 		'finishTestPass' => 'http://adlnet.gov/expapi/verbs/completed',
 	];
-	
-	
+
+
 	protected static $RELEVANT_PARENTS = ['cat', 'crs', 'grp', 'root'];
-	
+
 	const CATEGORY_DEFINITION_TYPE_TAG = 'http://id.tincanapi.com/activitytype/tag';
-	
+
 	const DEFAULT_LOCALE = 'en-US';
-	
+
 	/**
 	 * @var ilCmiXapiLrsType
 	 */
 	protected $lrsType;
-	
+
 	/**
 	 * @var ilObject
 	 */
 	protected $object;
-	
+
 	/**
 	 * @var ilObjUser
 	 */
@@ -54,7 +58,7 @@ class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerial
 	 * @var string
 	 */
 	protected $event_type;
-	
+
 	/**
 	 * ilTst2LrsXapiStatement constructor.
 	 * @param ilCmiXapiLrsType|ilXapiCmi5Type  $lrsType
@@ -68,8 +72,7 @@ class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerial
 		string $event_type,
 		$pass_details,
 		$test_details
-	)
-	{
+	) {
 		$this->lrsType = $lrsType;
 		$this->object = $object;
 		$this->user = $user;
@@ -77,21 +80,27 @@ class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerial
 		$this->pass_details = $pass_details;
 		$this->test_details = $test_details;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	protected function buildTimestamp()
 	{
-		$timestamp = new ilCmiXapiDateTime($this->test_details['result_tstamp'], IL_CAL_UNIX);
+		/* Generate Timestamp */
+		$raw_timestamp = time();
+		if ($this->event_type == 'finishTestPass') {
+			/* If user submits test, use test result timestamp	 */
+			$raw_timestamp = $this->test_details['result_tstamp'];
+		}
+		$timestamp = new ilCmiXapiDateTime($raw_timestamp, IL_CAL_UNIX);
 		return $timestamp->toXapiTimestamp();
 	}
-	
+
 	protected function hasResult()
 	{
 		return $this->pass_details !== null;
 	}
-	
+
 	/**
 	 * @return array
 	 */
@@ -108,12 +117,20 @@ class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerial
 			'success' => $this->test_details['passed'] == 1
 		];
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	protected function getVerbId()
 	{
 		return self::$VERBS_BY_EVENT_TYPE[$this->event_type];
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function getVerbName()
+	{
+		return self::$XAPI_VERBS[$this->getVerbId()];
 	}
 }
