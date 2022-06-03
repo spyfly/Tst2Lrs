@@ -106,16 +106,21 @@ class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerial
 	 */
 	protected function buildResult()
 	{
-		return [
+		$resultObj = [
 			'score' => [
 				'scaled' => $this->pass_details['percent'],
 				'raw' => $this->pass_details['total_reached_points'],
 				'min' => 0,
 				'max' => $this->pass_details['total_max_points'],
 			],
-			'completion' => $this->event_type === 'finishTestPass',
-			'success' => $this->test_details['passed'] == 1
+			'completion' => $this->event_type === 'finishTestPass'
 		];
+
+		if ($this->event_type === 'finishTestPass') { /* Only include success statments for finished tests */
+			$resultObj['success'] = $this->test_details['passed'] == 1;
+		}
+
+		return $resultObj;
 	}
 
 	/**

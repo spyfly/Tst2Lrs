@@ -1,5 +1,10 @@
 # Tst2Lrs ILIAS Plugin
 
+## About
+This is an ILIAS-Plugin for exporting test progress and results data to a LRS. 
+
+For a more detailed description, refer to the [documentation](docs/README.md).
+
 ## Requirements
 
 Install the [Lp2Lrs Plugin](https://github.com/internetlehrer/Lp2Lrs) first and configure a learning record store.
