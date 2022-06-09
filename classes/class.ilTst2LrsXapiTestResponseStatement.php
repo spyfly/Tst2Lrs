@@ -112,7 +112,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 			'completion' => $this->ass_details['answered'] == 1,
 		];
 
-		if (count($this->user_solutions) > 0) {
+		if (count($this->user_solutions) > 0 && $this->getInteractionType() !== null) {
 			$result['response'] = $this->buildUserResponse();
 		}
 
@@ -142,7 +142,10 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 
 	protected function getInteractionType()
 	{
-		return self::$INTERACTION_TYPES[$this->ass_details['type']];
+		if (array_key_exists($this->ass_details['type'], self::$INTERACTION_TYPES)) {
+			return self::$INTERACTION_TYPES[$this->ass_details['type']];
+		}
+		return null;
 	}
 
 	/* Placeholder */
@@ -157,13 +160,15 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 			]
 		];
 
-		$objectProperties['definition']['interactionType'] = $this->getInteractionType();
-		if ($this->getInteractionType() === 'choice') {
-			list($objectProperties['definition']['choices'], $objectProperties['definition']['correctResponsesPattern']) = $this->buildChoicesList();
-		} else if ($this->getInteractionType() === 'numeric') {
-			$objectProperties['definition']['correctResponsesPattern'] = $this->buildNumericCorrectResponsesPattern();
-		} else if ($this->getInteractionType() === 'long-fill-in') {
-			$objectProperties['definition']['correctResponsesPattern'] = $this->buildFillInCorrectResponsesPattern();
+		if ($this->getInteractionType() !== null) {
+			$objectProperties['definition']['interactionType'] = $this->getInteractionType();
+			if ($this->getInteractionType() === 'choice') {
+				list($objectProperties['definition']['choices'], $objectProperties['definition']['correctResponsesPattern']) = $this->buildChoicesList();
+			} else if ($this->getInteractionType() === 'numeric') {
+				$objectProperties['definition']['correctResponsesPattern'] = $this->buildNumericCorrectResponsesPattern();
+			} else if ($this->getInteractionType() === 'long-fill-in') {
+				$objectProperties['definition']['correctResponsesPattern'] = $this->buildFillInCorrectResponsesPattern();
+			}
 		}
 
 		return $objectProperties;

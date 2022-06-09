@@ -32,13 +32,6 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
      */
     protected static $instance = null;
 
-    const SUPPORTED_QUESTION_TYPES = [
-		'assSingleChoice',
-		'assMultipleChoice',
-		'assTextQuestion',
-		'assNumeric'
-	];
-
     /**
      * ilTst2LrsPlugin constructor
      */
@@ -71,7 +64,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         if ($a_event === 'finishTestPass') { /* Only submit responses on finish */
             foreach ($results as $key => $values) {
                 self::dic()->logger()->root()->info('DEBUG-Tst2Lrs | Values for "' . $key . '" ' . print_r($values, true));
-                if ($values['qid'] && in_array($values['type'], self::SUPPORTED_QUESTION_TYPES)) {
+                if ($values['qid']) {
                     /* Load questionUi and solution values (needs active and passId) */
                     $questionUi = $ilTestServiceGui->object->createQuestionGUI("", $values['qid']);
                     $solutionsRaw = $questionUi->object->getSolutionValues($active_id, $pass);

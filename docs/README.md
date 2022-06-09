@@ -20,9 +20,7 @@ When a test is submitted, additional xAPI question response statements are gener
 
 These statements include data such as scoring, submitted answers, solutions, the test question and more.
 
-For non-supported types, no statements are generated.
+For non-supported-types, submitted answers and solutions are not included.
 
 ## Adding support for new question types
-Support for new question types can be added by adding the type to `ilTst2LrsPlugin::SUPPORTED_QUESTION_TYPES` and then extending the logic in the `ilTst2LrsXapiTestResponseStatement` class.
-
-This includes adding the correct xAPI interaction type in `$INTERACTION_TYPES` and adding the wanted properties to the `buildObject()` function.
+Support for new question types can be added by adding the type to `ilTst2LrsXapiTestResponseStatement::$INTERACTION_TYPES` and then extending the logic in the `ilTst2LrsXapiTestResponseStatement` class.
