@@ -24,3 +24,8 @@ For non-supported-types, submitted answers and solutions are not included.
 
 ## Adding support for new question types
 Support for new question types can be added by adding the type to `ilTst2LrsXapiTestResponseStatement::$INTERACTION_TYPES` and then extending the logic in the `ilTst2LrsXapiTestResponseStatement` class.
+
+## Future Work
+- Adding support for more question types
+- Integrate question feedback
+- Support question hints
