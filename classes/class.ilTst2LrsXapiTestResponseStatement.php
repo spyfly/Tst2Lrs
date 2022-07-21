@@ -13,7 +13,7 @@ use spyfly\Plugins\Tst2Lrs\Utils\Tst2LrsTrait;
  * @author      Björn Heyser <info@bjoernheyser.de>
  * @author      Sebastian Heiden <tst2lrs@spyfly.xyz>
  */
-class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implements JsonSerializable
+class ilTst2LrsXapiTestResponseStatement extends ilEvents2LrsXapiStatement implements JsonSerializable
 {
 	use Tst2LrsTrait;
 	use DICTrait;
@@ -75,6 +75,10 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 		$this->testObj = $testObj;
 		$this->questionUi = $questionUi;
 		$this->user_solutions = $user_solutions;
+
+		global $DIC; /** @var Container $DIC */
+		$this->dic = $DIC;
+		$this->plugin = ilPlugin::getPluginObject(IL_COMP_SERVICE, 'EventHandling', 'evhk', 'Tst2Lrs');
 	}
 
 	/**
@@ -100,7 +104,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	/**
 	 * @return array
 	 */
-	protected function buildResult()
+	protected function buildResult(): array
 	{
 		$result = [
 			'score' => [
@@ -149,7 +153,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	}
 
 	/* Placeholder */
-	protected function buildObject()
+	protected function buildObject(): array
 	{
 		$objectProperties = [
 			'id' => $this->buildContext()['contextActivities']['parent']['id'] . '/' . $this->ass_details['qid'],
@@ -217,7 +221,7 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
 	/**
 	 * @return array
 	 */
-	protected function buildContext()
+	protected function buildContext(): array
 	{
 		$context = [
 			'contextActivities' => []
@@ -232,6 +236,14 @@ class ilTst2LrsXapiTestResponseStatement extends ilLp2LrsXapiStatement implement
             $context['contextActivities']['category'] = $categories;
         }
 		*/
+
+		/* Add Extensions Context */
+		$context['extensions'] = [
+			"http://ilias.event" => "afterChangeEvent",
+			"http://ilias.version" => ILIAS_VERSION,
+			"http://ilias.plugin" => $this->plugin->getPluginName(),
+			"http://ilias." . $this->plugin->getPluginName() => $this->plugin->getVersion()
+		];
 
 		return $context;
 	}

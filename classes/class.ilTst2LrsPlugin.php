@@ -48,9 +48,9 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         $ilUsrObj = new ilObjUser($user_id);
 
         /* Init LRS Record Store and xAPI STMT List */
-        $xapiStatementList = new ilLp2LrsXapiStatementList();
-        $settings = new ilSetting(ilLp2LrsCron::JOB_ID);
-        $lrsTypeId = $settings->get('lrs_type_id', 0);
+        $xapiStatementList = new ilEvents2LrsXapiStatementList();
+        $settings = new ilSetting();
+        $lrsTypeId = $settings->get('xelrs__lrs_type_id', 0);
         $lrsType = new ilCmiXapiLrsType($lrsTypeId);
         /* Init LRS End */
 
@@ -83,7 +83,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
         /* Test finalization stmt end */
 
         /* Send Data to LRS */
-        $lrsRequest = new ilLp2LrsXapiRequest(
+        $lrsRequest = new ilEvents2LrsXapiRequest(
             ilLoggerFactory::getRootLogger(),
             $lrsType->getLrsEndpointStatementsLink(),
             $lrsType->getLrsKey(),
@@ -121,6 +121,7 @@ class ilTst2LrsPlugin extends ilEventHookPlugin
     public function getPluginName(): string
     {
         return self::PLUGIN_NAME;
+        ilEvents2LrsPlugin::getLrsType();
     }
 
 
