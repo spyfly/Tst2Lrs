@@ -7,7 +7,7 @@ For a more detailed description, refer to the [documentation](docs/README.md).
 
 ## Requirements
 
-Install the [Lp2Lrs Plugin](https://github.com/internetlehrer/Lp2Lrs) first and configure a learning record store.
+Install the [Events2Lrs Plugin](https://github.com/internetlehrer/Events2Lrs) first and configure a learning record store.
 
 ## Installation
 

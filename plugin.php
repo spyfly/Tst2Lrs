@@ -4,7 +4,7 @@
 require_once __DIR__ . "/vendor/autoload.php";
 
 $id = "tst2lrs";
-$version = "0.1.0";
+$version = "0.2.0";
 $ilias_min_version = "6.0";
 $ilias_max_version = "7.999";
 $responsible = "Sebastian Heiden";

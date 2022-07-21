@@ -13,7 +13,7 @@ use spyfly\Plugins\Tst2Lrs\Utils\Tst2LrsTrait;
  * @author      Björn Heyser <info@bjoernheyser.de>
  * @author      Sebastian Heiden <tst2lrs@spyfly.xyz>
  */
-class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerializable
+class ilTst2LrsXapiStatement extends ilEvents2LrsXapiStatement implements JsonSerializable
 {
 	use Tst2LrsTrait;
 	use DICTrait;
@@ -79,6 +79,10 @@ class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerial
 		$this->event_type = $event_type;
 		$this->pass_details = $pass_details;
 		$this->test_details = $test_details;
+
+		global $DIC; /** @var Container $DIC */
+		$this->dic = $DIC;
+		$this->plugin = ilPlugin::getPluginObject(IL_COMP_SERVICE, 'EventHandling', 'evhk', 'Tst2Lrs');
 	}
 
 	/**
@@ -104,7 +108,7 @@ class ilTst2LrsXapiStatement extends ilLp2LrsXapiStatement implements JsonSerial
 	/**
 	 * @return array
 	 */
-	protected function buildResult()
+	protected function buildResult(): array
 	{
 		$resultObj = [
 			'score' => [
