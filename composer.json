@@ -1,7 +1,7 @@
 {
   "name": "spyfly/tst2lrs",
-  "description": "Short description",
-  "version": "0.1.0",
+  "description": "This is an ILIAS-Plugin for exporting test progress and results data to a LRS.",
+  "version": "0.2.0",
   "extra": {
     "ilias_plugin": {
       "id": "tst2lrs",

@@ -130,7 +130,7 @@ class ilTst2LrsXapiStatement extends ilEvents2LrsXapiStatement implements JsonSe
 	/**
 	 * @return string
 	 */
-	protected function getVerbId()
+	protected function getVerbId(): string
 	{
 		return self::$VERBS_BY_EVENT_TYPE[$this->event_type];
 	}
